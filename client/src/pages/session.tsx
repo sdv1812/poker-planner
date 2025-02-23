@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { useRoute } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Layout, Copy, Eye, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -18,6 +19,7 @@ export default function SessionPage() {
   const [showJoin, setShowJoin] = useState(true);
   const [currentParticipant, setCurrentParticipant] = useState<Participant | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [ticketNumber, setTicketNumber] = useState("");
 
   // Fetch session state with polling
   const { data, isLoading } = useQuery({
@@ -116,6 +118,26 @@ export default function SessionPage() {
     },
   });
 
+  const updateTicketMutation = useMutation({
+    mutationFn: async (ticketNumber: string) => {
+      await apiRequest("POST", `/api/sessions/${params?.id}/ticket`, { ticketNumber });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/sessions/${params?.id}`] });
+      toast({
+        title: "Success",
+        description: "Ticket number updated",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update ticket number. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleJoin = (name: string) => {
     joinMutation.mutate(name);
   };
@@ -136,6 +158,13 @@ export default function SessionPage() {
         return prev - 1;
       });
     }, 1000);
+  };
+
+  const handleTicketUpdate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (ticketNumber.trim()) {
+      updateTicketMutation.mutate(ticketNumber.trim());
+    }
   };
 
   const copyLink = () => {
@@ -178,6 +207,25 @@ export default function SessionPage() {
             </CardHeader>
 
             <CardContent className="space-y-6">
+              <form onSubmit={handleTicketUpdate} className="flex gap-2">
+                <Input
+                  placeholder="Enter ticket number (e.g. PROJ-123)"
+                  value={ticketNumber}
+                  onChange={(e) => setTicketNumber(e.target.value)}
+                  className="flex-1"
+                />
+                <Button type="submit" variant="outline">
+                  Update Ticket
+                </Button>
+              </form>
+
+              {session.ticketNumber && (
+                <div className="bg-muted p-4 rounded-lg">
+                  <p className="text-sm font-medium">Currently discussing:</p>
+                  <p className="text-lg">{session.ticketNumber}</p>
+                </div>
+              )}
+
               <ParticipantsList 
                 participants={participants || []}
                 revealed={session.revealed}

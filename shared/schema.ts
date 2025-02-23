@@ -7,6 +7,7 @@ export const sessions = pgTable("sessions", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   lastActive: timestamp("last_active").notNull().defaultNow(),
   revealed: boolean("revealed").notNull().default(false),
+  ticketNumber: text("ticket_number"),
 });
 
 export const participants = pgTable("participants", {

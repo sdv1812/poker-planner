@@ -23,6 +23,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ session, participants });
   });
 
+  // Update ticket number
+  app.post("/api/sessions/:id/ticket", async (req, res) => {
+    const session = await storage.updateSession(req.params.id, { 
+      ticketNumber: req.body.ticketNumber 
+    });
+    res.json(session);
+  });
+
   // Join session
   app.post("/api/sessions/:id/join", async (req, res) => {
     const session = await storage.getSession(req.params.id);

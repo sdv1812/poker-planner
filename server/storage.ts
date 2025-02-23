@@ -7,12 +7,12 @@ export interface IStorage {
   getSession(id: string): Promise<Session | undefined>;
   updateSession(id: string, updates: Partial<Session>): Promise<Session>;
   deleteSession(id: string): Promise<void>;
-  
+
   addParticipant(participant: InsertParticipant): Promise<Participant>;
   getParticipants(sessionId: string): Promise<Participant[]>;
   updateParticipant(id: number, updates: Partial<Participant>): Promise<Participant>;
   removeParticipant(id: number): Promise<void>;
-  
+
   cleanup(): Promise<void>;
 }
 
@@ -25,7 +25,7 @@ export class MemStorage implements IStorage {
     this.sessions = new Map();
     this.participants = new Map();
     this.currentParticipantId = 1;
-    
+
     // Run cleanup every minute
     setInterval(() => this.cleanup(), 60 * 1000);
   }
@@ -36,6 +36,7 @@ export class MemStorage implements IStorage {
       createdAt: new Date(),
       lastActive: new Date(),
       revealed: false,
+      ticketNumber: null,
     };
     this.sessions.set(session.id, newSession);
     return newSession;
@@ -48,7 +49,7 @@ export class MemStorage implements IStorage {
   async updateSession(id: string, updates: Partial<Session>): Promise<Session> {
     const session = await this.getSession(id);
     if (!session) throw new Error("Session not found");
-    
+
     const updated = { ...session, ...updates, lastActive: new Date() };
     this.sessions.set(id, updated);
     return updated;
@@ -57,7 +58,7 @@ export class MemStorage implements IStorage {
   async deleteSession(id: string): Promise<void> {
     this.sessions.delete(id);
     // Delete all participants in session
-    for (const [pid, p] of this.participants.entries()) {
+    for (const [pid, p] of this.participants) {
       if (p.sessionId === id) {
         this.participants.delete(pid);
       }
@@ -84,7 +85,7 @@ export class MemStorage implements IStorage {
   async updateParticipant(id: number, updates: Partial<Participant>): Promise<Participant> {
     const participant = this.participants.get(id);
     if (!participant) throw new Error("Participant not found");
-    
+
     const updated = { ...participant, ...updates, lastActive: new Date() };
     this.participants.set(id, updated);
     return updated;
@@ -96,16 +97,16 @@ export class MemStorage implements IStorage {
 
   async cleanup(): Promise<void> {
     const now = Date.now();
-    
+
     // Remove inactive sessions and their participants
-    for (const [sid, session] of this.sessions.entries()) {
+    for (const [sid, session] of this.sessions) {
       if (now - session.lastActive.getTime() > SESSION_TIMEOUT) {
         await this.deleteSession(sid);
       }
     }
-    
+
     // Remove inactive participants
-    for (const [pid, participant] of this.participants.entries()) {
+    for (const [pid, participant] of this.participants) {
       if (now - participant.lastActive.getTime() > SESSION_TIMEOUT) {
         await this.removeParticipant(pid);
       }
