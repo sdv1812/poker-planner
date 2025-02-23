@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRoute } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,11 +17,12 @@ export default function SessionPage() {
   const queryClient = useQueryClient();
   const [showJoin, setShowJoin] = useState(true);
   const [currentParticipant, setCurrentParticipant] = useState<Participant | null>(null);
+  const [countdown, setCountdown] = useState<number | null>(null);
 
   // Fetch session state with polling
   const { data, isLoading } = useQuery({
     queryKey: [`/api/sessions/${params?.id}`],
-    refetchInterval: 1000, // Poll every second
+    refetchInterval: 1000,
     enabled: !!params?.id,
     queryFn: () => apiRequest("GET", `/api/sessions/${params?.id}`)
       .then(res => res.json())
@@ -29,6 +30,20 @@ export default function SessionPage() {
 
   const session = data?.session as Session;
   const participants = data?.participants as Participant[];
+
+  // Calculate average of numeric votes
+  const calculateAverage = useCallback((participants: Participant[]) => {
+    const numericVotes = participants
+      .map(p => p.vote)
+      .filter((vote): vote is string => vote !== null && vote !== "?")
+      .map(Number)
+      .filter(n => !isNaN(n));
+
+    if (numericVotes.length === 0) return null;
+
+    const sum = numericVotes.reduce((a, b) => a + b, 0);
+    return (sum / numericVotes.length).toFixed(1);
+  }, []);
 
   // Mutations
   const joinMutation = useMutation({
@@ -109,6 +124,20 @@ export default function SessionPage() {
     voteMutation.mutate(vote);
   };
 
+  const handleReveal = () => {
+    setCountdown(3);
+    const timer = setInterval(() => {
+      setCountdown(prev => {
+        if (prev === null || prev <= 1) {
+          clearInterval(timer);
+          revealMutation.mutate();
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
   const copyLink = () => {
     navigator.clipboard.writeText(window.location.href);
     toast({
@@ -128,6 +157,8 @@ export default function SessionPage() {
       </div>
     );
   }
+
+  const average = session.revealed ? calculateAverage(participants || []) : null;
 
   return (
     <>
@@ -150,6 +181,7 @@ export default function SessionPage() {
               <ParticipantsList 
                 participants={participants || []}
                 revealed={session.revealed}
+                average={average}
               />
 
               <VotingCards
@@ -169,11 +201,13 @@ export default function SessionPage() {
                 </Button>
 
                 <Button
-                  onClick={() => revealMutation.mutate()}
-                  disabled={session.revealed}
+                  onClick={handleReveal}
+                  disabled={session.revealed || countdown !== null}
                 >
                   <Eye className="h-4 w-4 mr-2" />
-                  Reveal Votes
+                  {countdown !== null 
+                    ? `Revealing in ${countdown}...` 
+                    : "Reveal Votes"}
                 </Button>
               </div>
             </CardContent>
