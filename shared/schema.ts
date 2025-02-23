@@ -30,11 +30,3 @@ export type InsertParticipant = z.infer<typeof insertParticipantSchema>;
 
 export const VALID_VOTES = ["0", "1", "2", "3", "5", "8", "13", "21", "?"] as const;
 export type ValidVote = typeof VALID_VOTES[number];
-
-export type WSMessage = 
-  | { type: "join"; name: string }
-  | { type: "vote"; vote: ValidVote }
-  | { type: "reveal" }
-  | { type: "reset" }
-  | { type: "state_update"; session: Session; participants: Participant[] }
-  | { type: "error"; message: string };

@@ -1,102 +1,112 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRoute } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Layout, Copy, Eye, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { wsClient } from "@/lib/websocket";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { JoinDialog } from "@/components/join-dialog";
 import { VotingCards } from "@/components/voting-cards";
 import { ParticipantsList } from "@/components/participants-list";
 import type { Session, Participant, ValidVote } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function SessionPage() {
   const [, params] = useRoute("/session/:id");
   const { toast } = useToast();
-  const [session, setSession] = useState<Session | null>(null);
-  const [participants, setParticipants] = useState<Participant[]>([]);
+  const queryClient = useQueryClient();
   const [showJoin, setShowJoin] = useState(true);
   const [currentParticipant, setCurrentParticipant] = useState<Participant | null>(null);
-  const [connecting, setConnecting] = useState(false);
 
-  useEffect(() => {
-    if (!params?.id) return;
+  // Fetch session state with polling
+  const { data, isLoading } = useQuery({
+    queryKey: [`/api/sessions/${params?.id}`],
+    refetchInterval: 1000, // Poll every second
+    enabled: !!params?.id,
+    queryFn: () => apiRequest("GET", `/api/sessions/${params?.id}`)
+      .then(res => res.json())
+  });
 
-    const unsubscribe = wsClient.onMessage((msg) => {
-      if (msg.type === "state_update") {
-        setSession(msg.session);
-        setParticipants(msg.participants);
-        // Update current participant
-        const current = msg.participants.find(p => p.id === currentParticipant?.id);
-        if (current) setCurrentParticipant(current);
-      } else if (msg.type === "error") {
-        toast({
-          title: "Error",
-          description: msg.message,
-          variant: "destructive",
-        });
-      }
-    });
+  const session = data?.session as Session;
+  const participants = data?.participants as Participant[];
 
-    return () => {
-      unsubscribe();
-      wsClient.disconnect();
-    };
-  }, [params?.id, currentParticipant?.id]);
-
-  const handleJoin = async (name: string) => {
-    if (!params?.id || connecting) return;
-
-    setConnecting(true);
-    try {
-      await wsClient.connect(params.id);
-      wsClient.send({ type: "join", name });
+  // Mutations
+  const joinMutation = useMutation({
+    mutationFn: async (name: string) => {
+      const res = await apiRequest("POST", `/api/sessions/${params?.id}/join`, { name });
+      return res.json();
+    },
+    onSuccess: (participant) => {
+      setCurrentParticipant(participant);
       setShowJoin(false);
-    } catch (err) {
+      queryClient.invalidateQueries({ queryKey: [`/api/sessions/${params?.id}`] });
+    },
+    onError: () => {
       toast({
-        title: "Connection Error",
+        title: "Error",
         description: "Failed to join session. Please try again.",
         variant: "destructive",
       });
-    } finally {
-      setConnecting(false);
-    }
+    },
+  });
+
+  const voteMutation = useMutation({
+    mutationFn: async (vote: ValidVote) => {
+      await apiRequest("POST", `/api/sessions/${params?.id}/vote`, {
+        participantId: currentParticipant?.id,
+        vote,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/sessions/${params?.id}`] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to submit vote. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const revealMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", `/api/sessions/${params?.id}/reveal`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/sessions/${params?.id}`] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to reveal votes. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const resetMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", `/api/sessions/${params?.id}/reset`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/sessions/${params?.id}`] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to reset session. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleJoin = (name: string) => {
+    joinMutation.mutate(name);
   };
 
   const handleVote = (vote: ValidVote) => {
-    try {
-      wsClient.send({ type: "vote", vote });
-    } catch (err) {
-      toast({
-        title: "Connection Error",
-        description: "Failed to send vote. Please refresh and try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleReveal = () => {
-    try {
-      wsClient.send({ type: "reveal" });
-    } catch (err) {
-      toast({
-        title: "Connection Error",
-        description: "Failed to reveal votes. Please refresh and try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleReset = () => {
-    try {
-      wsClient.send({ type: "reset" });
-    } catch (err) {
-      toast({
-        title: "Connection Error",
-        description: "Failed to reset session. Please refresh and try again.",
-        variant: "destructive",
-      });
-    }
+    voteMutation.mutate(vote);
   };
 
   const copyLink = () => {
@@ -107,7 +117,7 @@ export default function SessionPage() {
     });
   };
 
-  if (!session) {
+  if (isLoading || !session) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
@@ -138,7 +148,7 @@ export default function SessionPage() {
 
             <CardContent className="space-y-6">
               <ParticipantsList 
-                participants={participants}
+                participants={participants || []}
                 revealed={session.revealed}
               />
 
@@ -151,7 +161,7 @@ export default function SessionPage() {
               <div className="flex justify-center gap-4">
                 <Button
                   variant="outline"
-                  onClick={handleReset}
+                  onClick={() => resetMutation.mutate()}
                   disabled={!session.revealed}
                 >
                   <RotateCcw className="h-4 w-4 mr-2" />
@@ -159,7 +169,7 @@ export default function SessionPage() {
                 </Button>
 
                 <Button
-                  onClick={handleReveal}
+                  onClick={() => revealMutation.mutate()}
                   disabled={session.revealed}
                 >
                   <Eye className="h-4 w-4 mr-2" />
