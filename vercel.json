@@ -12,12 +12,12 @@
     ],
     "routes": [
       {
-        "src": "/(.*)",
-        "dest": "/dist/public/index.html"
+        "src": "/assets/(.*)",
+        "dest": "/assets/$1"
       },
       {
-        "src": "/assets/(.*)",
-        "dest": "/dist/public/assets/$1"
+        "src": "/(.*)",
+        "dest": "/index.html"
       }
     ]
   }
