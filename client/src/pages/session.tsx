@@ -226,7 +226,7 @@ export default function SessionPage() {
                 </div>
               )}
 
-              <ParticipantsList 
+              <ParticipantsList
                 participants={participants || []}
                 revealed={session.revealed}
                 average={average}
@@ -236,6 +236,7 @@ export default function SessionPage() {
                 selectedVote={currentParticipant?.vote as ValidVote}
                 revealed={session.revealed}
                 onVote={handleVote}
+                isSubmitting={voteMutation.isPending}
               />
 
               <div className="flex justify-center gap-4">
@@ -253,8 +254,8 @@ export default function SessionPage() {
                   disabled={session.revealed || countdown !== null}
                 >
                   <Eye className="h-4 w-4 mr-2" />
-                  {countdown !== null 
-                    ? `Revealing in ${countdown}...` 
+                  {countdown !== null
+                    ? `Revealing in ${countdown}...`
                     : "Reveal Votes"}
                 </Button>
               </div>
