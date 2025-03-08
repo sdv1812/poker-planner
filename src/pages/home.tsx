@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { useRouter } from 'next/router';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Layout } from "lucide-react";
+import { Button, Card, CardContent, CardHeader, CircularProgress, Typography } from '@mui/material';
 import axios from "axios";
 import '@/app/globals.css';
 
@@ -26,21 +24,21 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Layout className="h-6 w-6" />
-            Planning Poker
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-muted-foreground">
+        <CardHeader
+          className="flex flex-row items-center justify-between"
+          title="Planning Poker"
+        />
+        <CardContent className="flex flex-col items-center space-y-4">
+          <Typography variant="body2" color="textSecondary" className="mb-4">
             Create a new planning poker session to estimate user stories with your team.
-          </p>
+          </Typography>
           <Button 
-            className="w-full" 
-            size="lg"
+            variant="contained"
+            className="w-half" 
+            size="medium"
             onClick={createSession}
             disabled={loading}
+            startIcon={loading && <CircularProgress size={20} />}
           >
             Create New Session
           </Button>

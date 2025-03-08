@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/router";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Layout, Copy, Eye, RotateCcw } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@mui/material";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import { Copy, Eye, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { JoinDialog } from "@/components/join-dialog";
 import { VotingCards } from "@/components/voting-cards";
@@ -167,25 +167,21 @@ export default function SessionPage() {
       <div className="min-h-screen bg-gray-50 p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Layout className="h-6 w-6" />
-                Planning Poker
-              </CardTitle>
-              <Button variant="outline" size="icon" onClick={copyLink}>
+            <CardHeader title='Planning Poker' className="flex flex-row items-center justify-between">
+              <Button variant="outlined" size="small" onClick={copyLink}>
                 <Copy className="h-4 w-4" />
               </Button>
             </CardHeader>
 
             <CardContent className="space-y-6">
               <form onSubmit={handleTicketUpdate} className="flex gap-2">
-                <Input
+                <TextField
                   placeholder="Enter ticket number (e.g. PROJ-123)"
                   value={ticketNumber}
                   onChange={(e) => setTicketNumber(e.target.value)}
                   className="flex-1"
                 />
-                <Button type="submit" variant="outline">
+                <Button type="submit" variant="outlined">
                   Update Ticket
                 </Button>
               </form>
@@ -211,7 +207,7 @@ export default function SessionPage() {
 
               <div className="flex justify-center gap-4">
                 <Button
-                  variant="outline"
+                  variant="outlined"
                   onClick={handleReset}
                   disabled={!session.revealed}
                 >
