@@ -1,7 +1,7 @@
 import { VALID_VOTES, type ValidVote } from "@/shared/schema";
-import { Button } from "@/components/ui/button";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
 import { cn } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
 
 interface VotingCardsProps {
   selectedVote: ValidVote | null;
@@ -16,7 +16,7 @@ export function VotingCards({ selectedVote, revealed, onVote, isSubmitting = fal
       {VALID_VOTES.map((vote) => (
         <Button
           key={vote}
-          variant={selectedVote === vote ? "default" : "outline"}
+          variant={selectedVote === vote ? "contained" : "outlined"}
           className={cn(
             "h-24 text-2xl font-bold relative",
             revealed && selectedVote === vote && "ring-2 ring-primary",
@@ -26,7 +26,7 @@ export function VotingCards({ selectedVote, revealed, onVote, isSubmitting = fal
           disabled={isSubmitting || revealed}
         >
           {isSubmitting && selectedVote === vote ? (
-            <Loader2 className="h-6 w-6 animate-spin absolute" />
+            <CircularProgress size={24} className="absolute" />
           ) : (
             vote
           )}

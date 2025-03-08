@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader } from "@mui/material";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import { Copy, Eye, RotateCcw } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { ToastContainer, toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 import { JoinDialog } from "@/components/join-dialog";
 import { VotingCards } from "@/components/voting-cards";
 import { ParticipantsList } from "@/components/participants-list";
@@ -14,7 +15,6 @@ import "@/app/globals.css";
 
 export default function SessionPage() {
   const { query: { sessionId: param } } = useRouter();
-  const { toast } = useToast();
   const [showJoin, setShowJoin] = useState(true);
   const [currentParticipant, setCurrentParticipant] = useState<Participant | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -64,11 +64,7 @@ export default function SessionPage() {
       fetchSession();
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to join session. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to join session. Please try again.");
     }
   };
 
@@ -81,11 +77,7 @@ export default function SessionPage() {
       fetchSession();
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to submit vote. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to submit vote. Please try again.");
     }
   };
 
@@ -109,17 +101,10 @@ export default function SessionPage() {
       try {
         await axios.post(`/api/sessions/${param}/ticket`, { ticketNumber: ticketNumber.trim() });
         fetchSession();
-        toast({
-          title: "Success",
-          description: "Ticket number updated",
-        });
+        toast.success("Ticket number updated");
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to update ticket number. Please try again.",
-          variant: "destructive",
-        });
+        toast.error("Failed to update ticket number. Please try again.");
       }
     }
   };
@@ -130,20 +115,13 @@ export default function SessionPage() {
       fetchSession();
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to reset session. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to reset session. Please try again.");
     }
   };
 
   const copyLink = () => {
     navigator.clipboard.writeText(window.location.href);
-    toast({
-      title: "Copied!",
-      description: "Session link copied to clipboard",
-    });
+    toast.success("Session link copied to clipboard");
   };
 
   if (isLoading || !session) {
@@ -163,15 +141,16 @@ export default function SessionPage() {
   return (
     <>
       <JoinDialog open={showJoin} onJoin={handleJoin} />
-
+      <ToastContainer />
       <div className="min-h-screen bg-gray-50 p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <Card>
-            <CardHeader title='Planning Poker' className="flex flex-row items-center justify-between">
+            <CardHeader title='Planning Poker' className="flex flex-row items-center justify-between"
+            action={
               <Button variant="outlined" size="small" onClick={copyLink}>
                 <Copy className="h-4 w-4" />
               </Button>
-            </CardHeader>
+            } />
 
             <CardContent className="space-y-6">
               <form onSubmit={handleTicketUpdate} className="flex gap-2">

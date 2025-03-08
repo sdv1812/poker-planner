@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import Dialog from "@mui/material/Dialog";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import { toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
 interface JoinDialogProps {
   open: boolean;
@@ -12,16 +14,11 @@ interface JoinDialogProps {
 
 export function JoinDialog({ open, onJoin }: JoinDialogProps) {
   const [name, setName] = useState("");
-  const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter your name",
-        variant: "destructive",
-      });
+      toast.error("Please enter your name");
       return;
     }
     onJoin(name.trim());
@@ -30,21 +27,20 @@ export function JoinDialog({ open, onJoin }: JoinDialogProps) {
   return (
     <Dialog open={open}>
       <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Join Planning Poker</DialogTitle>
-        </DialogHeader>
+        <DialogTitle>Join Planning Poker</DialogTitle>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Your Name</Label>
-            <Input
+            <TextField
               id="name"
+              label="Your Name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter your name"
               autoFocus
+              fullWidth
             />
           </div>
-          <Button type="submit" className="w-full">Join Session</Button>
+          <Button type="submit" variant="contained" fullWidth>Join Session</Button>
         </form>
       </DialogContent>
     </Dialog>

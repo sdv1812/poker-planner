@@ -1,6 +1,7 @@
 import { type Participant } from "@/shared/schema";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import Card from "@mui/material/Card";
+import Badge from "@mui/material/Badge";
+import Typography from "@mui/material/Typography";
 import { Check, Clock } from "lucide-react";
 
 interface ParticipantsListProps {
@@ -9,15 +10,16 @@ interface ParticipantsListProps {
   average: string | null;
 }
 
+
 export function ParticipantsList({ participants, revealed, average }: ParticipantsListProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Participants ({participants.length})</h2>
+        <Typography variant="h6">Participants ({participants.length})</Typography>
         {revealed && average && (
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Average:</span>
-            <Badge variant="secondary" className="text-lg px-3 py-1">{average}</Badge>
+            <Typography variant="body2" color="textSecondary">Average:</Typography>
+            <Badge badgeContent={average} color="secondary" />
           </div>
         )}
       </div>
@@ -25,10 +27,10 @@ export function ParticipantsList({ participants, revealed, average }: Participan
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {participants.map((participant) => (
           <Card key={participant.id} className="p-4 flex items-center justify-between">
-            <span className="font-medium">{participant.name}</span>
+            <Typography variant="body1">{participant.name}</Typography>
             {participant.vote ? (
               revealed ? (
-                <Badge variant="default">{participant.vote}</Badge>
+                <Badge badgeContent={participant.vote} color="default" />
               ) : (
                 <Check className="h-5 w-5 text-green-500" />
               )
