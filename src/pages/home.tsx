@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Layout } from "lucide-react";
 import axios from "axios";
+import '@/app/globals.css';
 
 export default function Home() {
   const [loading, setLoading] = useState(false);

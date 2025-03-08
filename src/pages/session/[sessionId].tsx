@@ -10,6 +10,7 @@ import { VotingCards } from "@/components/voting-cards";
 import { ParticipantsList } from "@/components/participants-list";
 import axios from "axios";
 import { Participant, Session, ValidVote } from "@/shared/schema";
+import "@/app/globals.css";
 
 export default function SessionPage() {
   const { query: { sessionId: param } } = useRouter();
@@ -22,7 +23,6 @@ export default function SessionPage() {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  console.log("params", param);
   const fetchSession = async () => {
     if (!param) return;
     try {
