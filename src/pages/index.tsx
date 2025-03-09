@@ -34,7 +34,7 @@ export default function Home() {
           </Typography>
           <Button 
             variant="contained"
-            className="w-half" 
+            className="w-half bg-primary" 
             size="medium"
             onClick={createSession}
             disabled={loading}
