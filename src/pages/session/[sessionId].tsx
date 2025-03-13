@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/router";
-import { Card, CardContent, CardHeader } from "@mui/material";
+import { Card, CardContent, CardHeader, ThemeProvider } from "@mui/material";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import { Copy, Eye, RotateCcw } from "lucide-react";
@@ -12,6 +12,7 @@ import { ParticipantsList } from "@/components/participants-list";
 import axios from "axios";
 import { Participant, Session, ValidVote } from "@/shared/schema";
 import "@/app/globals.css";
+import theme from '@/theme';
 
 export default function SessionPage() {
   const { query: { sessionId: param } } = useRouter();
@@ -27,8 +28,10 @@ export default function SessionPage() {
     if (!param) return;
     try {
       const res = await axios.get(`/api/sessions/${param}`);
+      console.log('res data', res.data);
       setSession(res.data.session);
       setParticipants(res.data.participants);
+      setCurrentParticipant(res.data.participants.find(p => p.id === currentParticipant?.id) || null);
     } catch (error) {
       console.error("Failed to fetch session:", error);
     } finally {
@@ -139,7 +142,7 @@ export default function SessionPage() {
   const average = session.revealed ? calculateAverage(participants || []) : null;
 
   return (
-    <>
+    <ThemeProvider theme={theme}>
       <JoinDialog open={showJoin} onJoin={handleJoin} />
       <ToastContainer />
       <div className="min-h-screen bg-gray-50 p-4">
@@ -195,6 +198,7 @@ export default function SessionPage() {
                 </Button>
 
                 <Button
+                  variant="contained"
                   onClick={handleReveal}
                   disabled={session.revealed || countdown !== null}
                 >
@@ -208,6 +212,6 @@ export default function SessionPage() {
           </Card>
         </div>
       </div>
-    </>
+    </ThemeProvider>
   );
 }

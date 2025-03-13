@@ -11,6 +11,8 @@ interface VotingCardsProps {
 }
 
 export function VotingCards({ selectedVote, revealed, onVote, isSubmitting = false }: VotingCardsProps) {
+  console.log('selectedVote', selectedVote);
+  console.log('revealed', revealed);
   return (
     <div className="grid grid-cols-3 sm:grid-cols-5 gap-4 p-4">
       {VALID_VOTES.map((vote) => (
